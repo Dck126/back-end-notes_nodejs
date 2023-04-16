@@ -1,11 +1,17 @@
 // folder services akan menampung segala fungsi yang digunakan untuk menulis, mendapatkan, mengubah, atau menghapus sebuah resource.
 // folder service akan manangani operasi CRUD pada resource sedangkan handler akan fokus pada request handling or response client.
-// berkas BooksService.js digunakan untuk mengelola folder books dalam inMemory (didalam memory menggunakan array)
+// berkas NotesService.js digunakan untuk mengelola folder books dalam inMemory (didalam memory menggunakan array)
 const { nanoid } = require("nanoid");
+const InvariantError = require("../../exceptions/InvariantError");
+const NotFoundError = require("../../exceptions/NotFoundError");
+
+// Object NoteService menampung operasi CRUD.
+// pada constructor terdapat array, yang akan manmpung seluruh resource dari berkas NoteService.js
 class NotesService {
   constructor() {
     this._notes = [];
   }
+  // membuat operasi CRUD untuk mengelola data pada this._notes.
 
   // method menambahkan note
   addNote({ title, body, tags }) {
@@ -22,7 +28,7 @@ class NotesService {
       this._notes.filter((note) => note.id === id).length > 0;
 
     if (!isNoteSuccess) {
-      throw new Error("Catatan gagal ditambahkan");
+      throw new InvariantError("Catatan gagal ditambahkan");
     }
     return id;
   }
@@ -37,7 +43,7 @@ class NotesService {
     const note = this._notes.filter((n) => n.id === id)[0];
 
     if (!note) {
-      throw new Error("Catatan tidak ditemukan");
+      throw new NotFoundError("Catatan tidak ditemukan");
     }
     return note;
   }
@@ -47,7 +53,7 @@ class NotesService {
     const index = this._notes.findIndex((note) => note.id === id);
 
     if (index === -1) {
-      throw new Error("Gagal memperbarui catatan. Id tidak ditemukan");
+      throw new NotFoundError("Gagal memperbarui catatan. Id tidak ditemukan");
     }
 
     const updatedAt = new Date().toISOString();
@@ -66,7 +72,7 @@ class NotesService {
     const index = this._notes.findIndex((note) => note.id === id);
 
     if (index === -1) {
-      throw new Error("Catatan gagal dihapus. Id tidak ditemukan");
+      throw new NotFoundError("Catatan gagal dihapus. Id tidak ditemukan");
     }
     this._notes.splice(index, 1);
   }

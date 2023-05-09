@@ -14,20 +14,20 @@ class NotesService {
   /*
   fungsi query() berjalan secara asynchronous, dengan begitu kita perlu menambahkan async pada addNote dan await pada pemanggilan query().
   */
+
   async addNote({ title, body, tags }) {
     const id = nanoid(16);
     const createdAt = new Date().toISOString();
     const updatedAt = createdAt;
 
     // menggunakan query berparameter, RETURNING id akan mengembalikan id notes;
-    // parameter 1,2,3,,4,5,6 merupakan parameter dari column table
+    // parameter 1,2,3,4,5,6 merupakan parameter dari column table
     const query = {
       text: "INSERT INTO notes VALUES($1, $2, $3, $4, $5, $6) RETURNING id",
       values: [id, title, body, tags, createdAt, updatedAt],
     };
 
     const result = await this._pool.query(query);
-
     if (!result.rows[0].id) {
       throw new InvariantError("Catatan gagal ditambahkan");
     } else {
@@ -40,6 +40,7 @@ class NotesService {
     const result = await this._pool.query("SELECT * FROM notes");
     return result.rows.map(mapDBToModel);
   }
+
   // menampilkan note by id
   async getNotebyId(id) {
     const query = {
@@ -53,6 +54,7 @@ class NotesService {
     }
     return result.rows.map(mapDBToModel)[0];
   }
+
   //   memperbarui note
   async putNotebyId(id, { title, body, tags }) {
     const updatedAt = new Date().toISOString();
@@ -65,6 +67,7 @@ class NotesService {
       throw new NotFoundError("Gagal memperbarui catatan. Id tidak ditemukan");
     }
   }
+
   //   menghapus notes
   async deletNotebyId(id) {
     const query = {

@@ -1,10 +1,12 @@
 const ClientError = require("../../exceptions/ClientError");
+// const autoBind = require("auto-bind");
 
 class UsersHandler {
   constructor(service, validator) {
     this._service = service;
     this._validator = validator;
 
+    // autoBind(this); //mem-bind nilai this untuk seluruh method sekaligus
     this.postUserHandler = this.postUserHandler.bind(this);
     this.getUserByIdHandler = this.getUserByIdHandler.bind(this);
   }
@@ -48,7 +50,7 @@ class UsersHandler {
   }
 
   //Request get by ID
-  async getUserByIdHandler(id) {
+  async getUserByIdHandler(request, h) {
     try {
       const { id } = request.params;
       const user = await this._service.getUserById(id);
@@ -67,6 +69,7 @@ class UsersHandler {
         response.code(error.statusCode);
         return response;
       }
+      // Server Error
       const response = h.response({
         status: "error",
         message: "Maaf, terjadi kegagalan pada server kami.",

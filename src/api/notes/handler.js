@@ -2,6 +2,7 @@
 // jadi semuah method dan logika yang ada di handler di teruskan ke routes untuk diatur pathnya.
 
 const ClientError = require("../../exceptions/ClientError");
+// const autoBind = require("auto-bind");
 
 // kita buat Object NotesHandler yang menampung logika yang menghandle permintaan client
 class NotesHandler {
@@ -13,6 +14,7 @@ class NotesHandler {
     Fungsi bind berfungsi untuk mengikat implementasi function agar ia tetap memiliki konteks sesuai nilai yang ditetapkan
     pada argumen yang diberikan pada fungsi bind tersebut.
     */
+    // autoBind(this); //mem-bind nilai this untuk seluruh method sekaligus
     this.postNoteHandler = this.postNoteHandler.bind(this);
     this.getNotesHandler = this.getNotesHandler.bind(this);
     this.getNoteByIdHandler = this.getNoteByIdHandler.bind(this);

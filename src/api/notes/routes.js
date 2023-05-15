@@ -18,26 +18,41 @@ const routes = (handler) => [
     method: "POST",
     path: "/notes",
     handler: handler.postNoteHandler, //hanya mempost or menambahkan 1 data (single) yang berarti note
+    options: {
+      auth: "notesapp_jwt_strategy",
+    },
   },
   {
     method: "GET",
     path: "/notes",
     handler: handler.getNotesHandler, //menampilkan banyak data (plural) yang berarti notes
+    options: {
+      auth: "notesapp_jwt_strategy",
+    },
   },
   {
     method: "GET",
     path: "/notes/{id}",
     handler: handler.getNoteByIdHandler, //menampilkan 1 data (single) sesuai id yang berarti note
+    options: {
+      auth: "notesapp_jwt_strategy",
+    },
   },
   {
     method: "PUT",
     path: "/notes/{id}",
     handler: handler.putNoteEditHandler, //menampilkan 1 data (single) untuk di edit yang berarti note
+    options: {
+      auth: "notesapp_jwt_strategy",
+    },
   },
   {
     method: "DELETE",
     path: "/notes/{id}",
     handler: handler.deleteNoteHandler, //menampilkan 1 data (single) untuk di hapus yang berarti note
+    options: {
+      auth: "notesapp_jwt_strategy",
+    },
   },
 ];
 

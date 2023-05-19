@@ -30,6 +30,9 @@ class NotesHandler {
       // mendapatkan user id pengguna yang terautentikasi melalui request.auth.credentials.id.
       const { id: credentialId } = request.auth.credentials;
 
+      console.log(request.auth.credentials);
+      console.log("CredentialId:", credentialId);
+
       const noteId = await this._service.addNote({
         title,
         body,

@@ -31,9 +31,8 @@ class NotesService {
     const result = await this._pool.query(query);
     if (!result.rows[0].id) {
       throw new InvariantError("Catatan gagal ditambahkan");
-    } else {
-      return result.rows[0].id;
     }
+    return result.rows[0].id;
   }
 
   //   menampilkan notes

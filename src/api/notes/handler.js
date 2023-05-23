@@ -20,6 +20,7 @@ class NotesHandler {
     this.getNoteByIdHandler = this.getNoteByIdHandler.bind(this);
     this.putNoteEditHandler = this.putNoteEditHandler.bind(this);
     this.deleteNoteHandler = this.deleteNoteHandler.bind(this);
+    this.getUsersByUsernameHandler = this.getUsersByUsernameHandler.bind(this);
   }
 
   async postNoteHandler(request, h) {
@@ -86,7 +87,7 @@ class NotesHandler {
       const { id } = request.params;
 
       const { id: credentialId } = request.auth.credentials;
-      await this._service.verifyNoteOwner(id, credentialId);
+      await this._service.verifyNoteAccess(id, credentialId);
 
       const note = await this._service.getNotebyId(id);
       return {
@@ -122,7 +123,7 @@ class NotesHandler {
       const { id } = request.params;
 
       const { id: credentialId } = request.auth.credentials;
-      await this._service.verifyNoteOwner(id, credentialId);
+      await this._service.verifyNoteAccess(id, credentialId);
 
       await this._service.putNotebyId(id, request.payload);
 
@@ -174,6 +175,37 @@ class NotesHandler {
         return response;
       }
       // Server ERROR!
+      const response = h.response({
+        status: "error",
+        message: "Maaf, terjadi kegagalan pada server kami.",
+      });
+      response.code(500);
+      console.error(error);
+      return response;
+    }
+  }
+
+  // this method will be used to handle request get users by username
+  async getUsersByUsernameHandler(request, h) {
+    try {
+      const { username = "" } = request.query;
+      const users = await this._service.getUsersByUsername(username);
+      return {
+        status: "success",
+        data: {
+          users,
+        },
+      };
+    } catch (error) {
+      if (error instanceof ClientError) {
+        const response = h.response({
+          status: "fail",
+          message: error.message,
+        });
+        response.code(error.statusCode);
+        return response;
+      }
+      // Server Error
       const response = h.response({
         status: "error",
         message: "Maaf, terjadi kegagalan pada server kami.",

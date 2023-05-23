@@ -8,8 +8,9 @@ const AuthorizationError = require("../../exceptions/AuthorizationError");
 /* Kita akan gunakan teknik pool daripada client. 
  Selain lebih mudah, tentu karena aplikasi yang kita buat akan sering sekali berinteraksi dengan database.*/
 class NotesService {
-  constructor() {
+  constructor(collaborationsService) {
     this._pool = new Pool();
+    this._collaborationsService = collaborationsService;
   }
   //   menambahkan notes
   /*
@@ -37,8 +38,15 @@ class NotesService {
 
   //   menampilkan notes
   async getNotes(owner) {
+    //Overall, this query retrieves all columns from the "notes" table,
+    //  including records where the owner matches the given parameter or where there is a matching
+    // collaboration in the "collaborations" table.
+    // The result set is then grouped by the "id" column of the "notes" table.
     const query = {
-      text: "SELECT * FROM notes WHERE owner = $1",
+      text: `SELECT notes.* FROM notes
+      LEFT JOIN collaborations ON collaborations.note_id = notes.id
+      WHERE notes.owner = $1 OR collaborations.user_id = $1
+      GROUP BY notes.id`,
       values: [owner],
     };
     const result = await this._pool.query(query);
@@ -48,7 +56,10 @@ class NotesService {
   // menampilkan note by id
   async getNotebyId(id) {
     const query = {
-      text: "SELECT * FROM notes WHERE id = $1",
+      text: `SELECT notes.*, users.username
+      FROM notes
+      LEFT JOIN users ON users.id = notes.owner
+      WHERE notes.id = $1`,
       values: [id],
     };
     const result = await this._pool.query(query);
@@ -75,15 +86,17 @@ class NotesService {
   //   menghapus notes
   async deletNotebyId(id) {
     const query = {
-      text: "DELETE FROM notes WHERE id=$1 RETURNING id",
+      text: "DELETE FROM notes WHERE id = $1 RETURNING id",
       values: [id],
     };
     const result = await this._pool.query(query);
     if (!result.rows.length) {
       throw new NotFoundError("Catatan gagal dihapus. Id tidak ditemukan");
+      // throw new NotFoundError("Catatan tidak ditemukan");
     }
   }
 
+  // this method will be used to note Owner
   async verifyNoteOwner(id, owner) {
     const query = {
       text: "SELECT * FROM notes WHERE id = $1",
@@ -91,13 +104,45 @@ class NotesService {
     };
     const result = await this._pool.query(query);
     if (!result.rows.length) {
-      throw new NotFoundError("Catatan tidak ditemukan");
+      throw new NotFoundError("Resource yang Anda minta tidak ditemukan");
     }
     const note = result.rows[0];
 
     if (note.owner !== owner) {
       throw new AuthorizationError("Anda tidak berhak mengakses resource ini");
     }
+  }
+
+  // this method will be used to define access rights owner and collaborator
+  async verifyNoteAccess(noteId, userId) {
+    try {
+      // this will be used to verify Note Owner
+      await this.verifyNoteOwner(noteId, userId);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      // this will be used to verify collaborator based noteId, userId.
+      // this._collaborationService used to call method verifyCollaborator to verify.
+
+      try {
+        await this._collaborationsService.verifyCollaborator(noteId, userId);
+      } catch {
+        throw error;
+      }
+    }
+  }
+
+  async getUsersByUsername(username) {
+    const query = {
+      // By using the % wildcard character at the end of the parameter value (``${username}%),
+      // the query will match any username` that starts with the provided value.
+      text: "SELECT id, username, fullname FROM users WHERE username LIKE $1",
+      values: [`${username}%`],
+    };
+
+    const resultUsers = await this._pool.query(query);
+    return resultUsers.rows;
   }
 }
 

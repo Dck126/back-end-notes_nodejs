@@ -9,6 +9,7 @@ class UsersHandler {
     // autoBind(this); //mem-bind nilai this untuk seluruh method sekaligus
     this.postUserHandler = this.postUserHandler.bind(this);
     this.getUserByIdHandler = this.getUserByIdHandler.bind(this);
+    // this.getUsersByUsernameHandler = this.getUsersByUsernameHandler.bind(this);
   }
   // Request post user
   async postUserHandler(request, h) {
@@ -79,6 +80,37 @@ class UsersHandler {
       return response;
     }
   }
+
+  // this method will be used to handle request get users by username
+  // async getUsersByUsernameHandler(request, h) {
+  //   try {
+  //     const { username = "" } = request.query;
+  //     const users = await this._service.getUsersByUsername(username);
+  //     return {
+  //       status: "success",
+  //       data: {
+  //         users,
+  //       },
+  //     };
+  //   } catch (error) {
+  //     if (error instanceof ClientError) {
+  //       const response = h.response({
+  //         status: "fail",
+  //         message: error.message,
+  //       });
+  //       response.code(error.statusCode);
+  //       return response;
+  //     }
+  //     // Server Error
+  //     const response = h.response({
+  //       status: "error",
+  //       message: "Maaf, terjadi kegagalan pada server kami.",
+  //     });
+  //     response.code(500);
+  //     console.error(error);
+  //     return response;
+  //   }
+  // }
 }
 
 module.exports = UsersHandler;

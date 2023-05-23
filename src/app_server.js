@@ -7,26 +7,37 @@ require("dotenv").config();
 const Hapi = require("@hapi/hapi");
 const notes = require("./api/notes");
 const Jwt = require("@hapi/jwt");
-const NotesService = require("./service/postgres/NotesService");
+const NotesService = require("./services/postgres/NotesService");
 const NotesValidator = require("./validator/notes");
 // users
 const users = require("./api/users");
-const UsersNotesService = require("./service/postgres/UsersNotesService");
+const UsersNotesService = require("./services/postgres/UsersNotesService");
 const UsersValidator = require("./validator/users");
 // Authentications
 const authenticaitons = require("./api/authentications");
-const AuthenticationsNotesService = require("./service/postgres/AuthenticationsNotesService");
+const AuthenticationsNotesService = require("./services/postgres/AuthenticationsNotesService");
 const TokenManager = require("./tokenize/TokenManager");
-const AuthenticationsValidator = require("./validator/Authentications");
+const AuthenticationsValidator = require("./validator/authentications");
+// Collaborations
+const collaborations = require("./api/collaborations");
+const CollaborationsService = require("./services/postgres/CollaborationsService");
+const CollaborationsValidator = require("./validator/collaborations");
 
 const init = async () => {
-  const notesService = new NotesService();
+  // create instance will be used to all Service
+  const collaborationsService = new CollaborationsService();
+  const notesService = new NotesService(collaborationsService);
   const usersNotesService = new UsersNotesService();
   const authenticationsNotesService = new AuthenticationsNotesService();
+
   // Megonfigurasi HTTP server
   const server = Hapi.server({
     port: process.env.PORT,
     host: process.env.HOST,
+    // error log
+    debug: {
+      request: ["error"],
+    },
     routes: {
       cors: {
         origin: ["*"],
@@ -87,6 +98,14 @@ const init = async () => {
         usersNotesService,
         validator: AuthenticationsValidator,
         tokenManager: TokenManager,
+      },
+    },
+    {
+      plugin: collaborations,
+      options: {
+        collaborationsService,
+        notesService,
+        validator: CollaborationsValidator,
       },
     },
   ]);

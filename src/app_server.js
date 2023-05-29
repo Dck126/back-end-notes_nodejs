@@ -2,11 +2,12 @@
 // mengimport konfigurasi .env
 require("dotenv").config();
 // Berkas ini menampung kode untuk membuat, mengonfigurasi, dan menjalankan HTTP server menggunakan Hapi.
-
-// Notes
 const Hapi = require("@hapi/hapi");
-const notes = require("./api/notes");
 const Jwt = require("@hapi/jwt");
+const Inert = require("@hapi/inert");
+const path = require("path");
+// Notes
+const notes = require("./api/notes");
 const NotesService = require("./services/postgres/NotesService");
 const NotesValidator = require("./validator/notes");
 // users
@@ -26,22 +27,32 @@ const CollaborationsValidator = require("./validator/collaborations");
 const _exports = require("./api/exports");
 const ProducerService = require("./services/rabbitmq/ProducerService");
 const ExportsValidator = require("./validator/exports");
+// uploads
+const uploads = require("./api/uploads");
+const StorageService = require("./services/storage/StorageService");
+const UploadsValidator = require("./validator/uploads");
+// cache with redis
+const CacheService = require("./services/redis/CacheService");
 
 const init = async () => {
   // create instance will be used to all Service
-  const collaborationsService = new CollaborationsService();
-  const notesService = new NotesService(collaborationsService);
+  const cacheService = new CacheService();
+  const collaborationsService = new CollaborationsService(cacheService);
+  const notesService = new NotesService(collaborationsService, cacheService);
   const usersNotesService = new UsersNotesService();
   const authenticationsNotesService = new AuthenticationsNotesService();
+  const storageService = new StorageService(
+    path.resolve(__dirname, "api/uploads/file/images")
+  );
 
   // Megonfigurasi HTTP server
   const server = Hapi.server({
     port: process.env.PORT,
     host: process.env.HOST,
     // error log
-    debug: {
-      request: ["error"],
-    },
+    // debug: {
+    //   request: ["error"],
+    // },
     routes: {
       cors: {
         origin: ["*"],
@@ -54,6 +65,9 @@ const init = async () => {
     // Plugin JWT/@hapi
     {
       plugin: Jwt,
+    },
+    {
+      plugin: Inert,
     },
   ]);
 
@@ -117,6 +131,13 @@ const init = async () => {
       options: {
         service: ProducerService,
         validator: ExportsValidator,
+      },
+    },
+    {
+      plugin: uploads,
+      options: {
+        service: storageService,
+        validator: UploadsValidator,
       },
     },
   ]);
